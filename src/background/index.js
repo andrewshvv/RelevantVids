@@ -6,9 +6,9 @@ export {}
 // it is needed because we need to identify the new active
 // youtube grid container
 chrome.tabs.onUpdated.addListener(
-  function(tabId, changeInfo, tab) {
+  function (tabId, changeInfo, tab) {
     if (changeInfo.url) {
-      chrome.tabs.sendMessage( tabId, {
+      chrome.tabs.sendMessage(tabId, {
         message: "ON_URL_CHANGED",
       })
     }

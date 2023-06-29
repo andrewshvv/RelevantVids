@@ -10,26 +10,30 @@ import {
   isActive,
   checkVideoElement,
   findVideoContainerByHref,
-  checkIfVideoLinkChanged,
+  checkIfVideoLinkChanged
 } from "./utils";
 
-// Initialize the context object to store theme and video state information
+console.info('chrome-ext template-react-js content script');
+
+const RUB_USD = 80;
+const TOKEN_PRICE = 0.0015;
+
+export {}
+
 let context = {
   theme: null,
   states: new Map(),
   activeState: null,
-};
+}
 
 function getCurrentState() {
   return context.activeState;
 }
 
-// Get the theme value from Chrome storage and update the theme
 chrome.storage.local.get("theme", function (result) {
   updateTheme(result.theme);
 });
 
-// Listen for changes in Chrome storage to update the theme
 chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (let key in changes) {
     let change = changes[key];
@@ -40,18 +44,16 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
   }
 });
 
-// Listen for messages from the background script
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === 'ON_URL_CHANGED') {
-    // If the YouTube page URL has changed, update the active state and resync video states
     if (!context.states.has(getYouTubePageName())) return;
     context.activeState = context.states.get(getYouTubePageName());
     console.log("NEW ACTIVE GRID", getYouTubePageName(), context.activeState.gridContainer);
     resyncVideoStates();
+    // resyncVideoStates();
   }
 });
 
-// Update the theme and reset videos when the theme value changes
 function updateTheme(theme) {
   if (theme === "") {
     context.theme = null;
@@ -69,7 +71,6 @@ function updateTheme(theme) {
   }
 }
 
-// Reset the videos by updating their status and visibility
 function resetVideos(active = false) {
   let state = getCurrentState();
   if (!state) return;
@@ -89,7 +90,6 @@ function resetVideos(active = false) {
   }
 }
 
-// Check the status of a video by sending a request to the remote server
 function checkVideo(video) {
   if (video.status !== "init") return;
   video.status = "queue";
@@ -121,7 +121,6 @@ function resyncVideoStates() {
   }
 }
 
-// Create a new video object or get an existing one based on the provided info element
 function createOrGetVideo(infoElem, state) {
   let videos = state.videos;
   let url = infoElem.getAttribute("href");
@@ -141,19 +140,18 @@ function createOrGetVideo(infoElem, state) {
   return [video, true];
 }
 
-// Sync the visibility of a video by manipulating its container element
 function syncVideoVisibility(video) {
   let element = findVideoContainerByHref(video.url);
   if (!element) return;
 
   if (video.active && !isActive(element)) {
     makeActive(element);
+    rearrangeVideoGrid();
     console.log("active", video.title.slice(0, 40));
   } else if (!video.active && isActive(element)) {
     makeInactive(element);
+    rearrangeVideoGrid();
   }
-
-  rearrangeVideoGrid();
 }
 
 // Perform a full update of the video grid by processing each video element
@@ -166,12 +164,11 @@ function fullUpdate(videoGrid, state) {
   });
 }
 
-// Function to be executed when the DOM is fully loaded
 function DOMContentLoaded() {
+  // Wait for the main container for video to appear in DOM.
   listenForVideoGrid();
 }
 
-// Add a new state object for the active video grid container
 function addNewState(gridContainer) {
   let currentState = {
     videos: new Map(),
@@ -183,7 +180,6 @@ function addNewState(gridContainer) {
   return currentState;
 }
 
-// Listen for the appearance of the main video grid container in the DOM
 function listenForVideoGrid() {
   const startSearchForMainVideoGrid = () => {
     const videoGrid = findVideoGridContainer();
@@ -193,14 +189,19 @@ function listenForVideoGrid() {
       fullUpdate(videoGrid, state);
     }
 
-    const domObserver = new MutationObserver((mutations) => {
+    // In case if page changes, we have to pick up new video grid.
+    const domObserver = new MutationObserver((mutations, observer) => {
       for (const mutation of mutations) {
+        // Detect if an element has just appeared
         if (mutation.type === 'childList') {
           for (const node of mutation.addedNodes) {
             if (!isItVideoGridContainer(node)) continue;
             let state = addNewState(node);
             listeningForNewVideos(node, state);
             fullUpdate(node, state);
+
+            // After two containers disconnect
+            if (context.states.size >= 2) observer.disconnect();
           }
         }
       }
@@ -209,48 +210,51 @@ function listenForVideoGrid() {
     domObserver.observe(document.body, {childList: true, subtree: true});
   };
 
+  // Start waiting for the videoGrid to appear in the DOM
   startSearchForMainVideoGrid();
 }
 
-// Listen for changes in the current active video grid container
+// Start observing the changes in the current active video grid container
+// i.e. listening for new videos to appear on page.
 function listeningForNewVideos(videoGridContainer, state) {
   const observerOptions = {
     childList: true,
-    attributes: true,
+    attributes: false,
     subtree: true,
   };
 
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
-      if (mutation.type === 'childList') {
-        let link = checkIfVideoLinkChanged(mutation.target);
-        if (link) {
-          let url = link.getAttribute("href");
-          let video = state.videos.get(url);
-          if (video) syncVideoVisibility(video);
+      if (mutation.type !== 'childList') return;
+
+      // For the case when we return back, and youtube changes
+      // the content of video container
+      let link = checkIfVideoLinkChanged(mutation.target);
+      if (link) {
+        let url = link.getAttribute("href");
+        let video = state.videos.get(url);
+        if (video) syncVideoVisibility(video);
+      }
+
+      let element = checkVideoElement(mutation.target);
+      if (element !== null) {
+        // console.log("ELEMENT", element);
+        let [video, justCreated] = createOrGetVideo(element, state);
+        syncVideoVisibility(video);
+
+        if (justCreated) {
+          checkVideo(video);
         }
-
-        mutation.addedNodes.forEach((node) => {
-          let element = checkVideoElement(node);
-          if (element) {
-            console.log("ELEMENT");
-            let [video, justCreated] = createOrGetVideo(element, state);
-            syncVideoVisibility(video);
-
-            if (justCreated) {
-              checkVideo(video);
-            }
-          }
-        });
       }
     }
   });
 
+  // Start observing the videoGridContainer with the specified configuration
   observer.observe(videoGridContainer, observerOptions);
   return observer;
 }
 
-// Print the state information periodically
+// State info print
 setInterval(function () {
   let queue = 0;
   let init = 0;
@@ -258,20 +262,23 @@ setInterval(function () {
   let active = 0;
   let inactive = 0;
 
+  // resyncVideoStates();
   for (const video of getCurrentState().videos.values()) {
     if (video.active) {
+      // console.log(video.title, findVideoContainerByHref(video.url));
       active++;
     }
     if (!video.active) inactive++;
     if (video.status === "init") init++;
     if (video.status === "queue") queue++;
     if (video.status === "checked") checked++;
+
   }
 
   console.log(`state ${(RUB_USD * TOKEN_PRICE * totalTokens / 1000).toFixed(2)},${totalTokens} ${init}/${queue}/${checked} ${active}/${inactive}/${active + inactive}`, getCurrentState());
 }, 10000);
 
-// Wait for the DOM to load and call the DOMContentLoaded function
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', DOMContentLoaded);
 } else {

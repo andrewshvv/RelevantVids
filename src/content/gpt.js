@@ -22,7 +22,7 @@ async function gptFilter(description, theme) {
   try {
     const chatCompletion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo-0613",
-      temperature: 0.1,
+      temperature: 0,
       messages: [
         {
           role: "system",

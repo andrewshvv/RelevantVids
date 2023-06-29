@@ -1,4 +1,3 @@
-// Exported functions and constants
 export {
   rearrangeVideoGrid,
   makeInactive,
@@ -13,16 +12,24 @@ export {
   checkVideoElement,
   findVideoContainerByHref,
   findVideoContainerByElement,
-  checkIfVideoLinkChanged,
+  checkIfVideoLinkChanged
 };
 
 // Constants
 const CONTAINER_SELECTOR = "ytd-rich-item-renderer";
-const GRID_SELECTOR = "contents";
-const INFO_SELECTOR = "video-title-link";
-const VIDEO_ROW_SELECTOR = "ytd-rich-grid-row";
+const GRID_SELECTOR = "contents"
+const INFO_SELECTOR = "video-title-link"
+const VIDEO_ROW_SELECTOR = "ytd-rich-grid-row"
 
-// Rearrange the video grid based on the visibility of the videos
+// The `rearrangeVideos()` function rearranges video elements on a webpage based on their visibility.
+// It first collects all video elements from the webpage and stores them in an array along with their visibility status.
+// It then assigns an index value to each video object based on its visibility.
+//
+// After this, the function creates a sorted copy of the videos array and sorts the video elements by their visibility
+// using the `sort()` function. During this sorting process, the `swap()` function is called to physically swap the
+// position of the elements in the DOM (Document Object Model) based on their assigned index. The result is that
+// visible videos are moved to the front and hidden videos are moved to the back, effectively rearranging the
+// order of the video elements based on their visibility.
 function rearrangeVideoGrid() {
   const rows = document.querySelectorAll(VIDEO_ROW_SELECTOR);
 
@@ -54,60 +61,79 @@ function rearrangeVideoGrid() {
   });
 }
 
-// Swap the positions of two elements in the DOM
 function swap(node1, node2) {
+  // Create a temporary placeholder element
   const placeholder = document.createElement('div');
+
+  // Insert the placeholder before node1 to mark its location
   node1.parentNode.insertBefore(placeholder, node1);
+
+  // Move node1 to node2's location
   node2.parentNode.insertBefore(node1, node2);
+
+  // Move node2 to the placeholder's location (original node1 location)
   placeholder.parentNode.insertBefore(node2, placeholder);
+
+  // Remove the placeholder element
   placeholder.parentNode.removeChild(placeholder);
 }
 
-// Check if an element is active
 function isActive(element) {
   return !element.classList.contains('disable-pointer-events');
 }
 
-// Make an element inactive
 function makeInactive(element) {
+  // Check if the element is currently inactive
   const isInactive = element.classList.contains('disable-pointer-events');
   if (isInactive) return;
 
+  // Toggle the disable-pointer-events class
   element.classList.add('disable-pointer-events');
 
+  // Update focus and tabindex for interactive elements
   const focusableElements = element.querySelectorAll('a[href], input, button, select, textarea');
   for (const focusable of focusableElements) {
+    // Save the old tabindex and prevent focus
     const oldTabIndex = focusable.getAttribute('tabindex') || '0';
     focusable.setAttribute('data-old-tabindex', oldTabIndex);
     focusable.setAttribute('tabindex', '-1');
   }
+
+  // element.style.display = 'none';
 }
 
-// Make an element active
 function makeActive(element) {
+  // Check if the element is currently inactive
   const isInactive = element.classList.contains('disable-pointer-events');
   if (!isInactive) return;
 
+  // Toggle the disable-pointer-events class
   element.classList.remove('disable-pointer-events');
 
+  // Update focus and tabindex for interactive elements
   const focusableElements = element.querySelectorAll('a[href], input, button, select, textarea');
   for (const focusable of focusableElements) {
+    // Restore the old tabindex
     const oldTabIndex = focusable.getAttribute('data-old-tabindex') || '0';
     focusable.setAttribute('tabindex', oldTabIndex);
     focusable.removeAttribute('data-old-tabindex');
   }
+
+  // element.style.display = '';
 }
 
-// Check if a node is a video grid container
+
 function isItVideoGridContainer(node) {
+  // Check if the current node has the id 'contents'
   if (node.id === 'contents') {
+    // Check if the parent node exists and has the correct class
     let parentNodeType = node.parentNode && node.parentNode.getAttribute('class');
     if (
       parentNodeType &&
       (parentNodeType.includes('style-scope ytd-two-column-browse-results-renderer') ||
         parentNodeType.includes('style-scope ytd-watch-next-secondary-results-renderer'))
     ) {
-
+      // Check if the child node exists and has the correct class
       if (
         node.children &&
         node.children.length > 0
@@ -122,23 +148,24 @@ function isItVideoGridContainer(node) {
     }
   }
 
+  // If the conditions are not met, return false
   return false;
 }
 
-// Find the video grid container on the page
 function findVideoGridContainer() {
   let nodes = document.querySelectorAll('#contents');
   if (!nodes) return null;
 
   for (let node of nodes) {
+    // Check if the correct parent and child nodes exist.
     if (!isItVideoGridContainer(node)) continue;
     return node;
   }
 
+  // If no matching node is found, return null
   return null;
 }
 
-// Get the YouTube page name based on the URL
 function getYouTubePageName() {
   const url = window.location.href;
   let page = null;
@@ -150,19 +177,23 @@ function getYouTubePageName() {
     } else if (urlObj.pathname.startsWith("/watch")) {
       page = "watch";
     }
-  } catch (_) { /* Failed to construct URL object, URL might not be valid */ }
+  } catch (_) { /* Failed to construct URL object, URL might not be valid */
+  }
 
   return page;
 }
 
-// Check if a node is a video element to be processed
 function checkVideoElement(node) {
+  // The first check is for the case when the added node itself has an ID 'video-title-link'.
+  // This means the video element is directly added to the DOM and needs to be processed.
   if (node.nodeType === Node.ELEMENT_NODE) {
     if (node.id === INFO_SELECTOR) {
-      return node;
+      console.log("VIDEO ELEMENT APPEARED", node);
+      return node
     } else {
       let element = node.querySelector(`#${INFO_SELECTOR}`);
       if (element) {
+        console.log("VIDEO ELEMENT part of", node, element);
         return element;
       }
     }
@@ -171,25 +202,22 @@ function checkVideoElement(node) {
   return null;
 }
 
-// Check if a video link has changed in the DOM
 function checkIfVideoLinkChanged(node) {
   if (node.nodeType === Node.ELEMENT_NODE) {
     if (node.id === "video-title") {
-      return node.parentNode;
+      return node.parentNode
     }
   }
 
   return null;
 }
 
-// Find the video container based on its href value
 function findVideoContainerByHref(href) {
   let link = findLinkElement(href);
   if (!link) return null;
   return findVideoContainerByElement(link);
 }
 
-// Find the video container based on the video element
 function findVideoContainerByElement(element) {
   let currentElement = element.parentNode;
 
@@ -204,7 +232,6 @@ function findVideoContainerByElement(element) {
   return null;
 }
 
-// Find a link element with a specific href value
 function findLinkElement(href) {
   let allAnchorTags = Array.from(document.querySelectorAll('a'));
 
