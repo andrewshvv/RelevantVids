@@ -1,0 +1,4 @@
+.disable-pointer-events {
+  pointer-events: none;
+  opacity: 0.1; /* Optional: makes the content appear "inactive" */
+}

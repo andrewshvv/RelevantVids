@@ -1,0 +1,76 @@
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.history
+*.log
+
+# secrets
+secrets.*.js
+
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Log files
+logs
+
+# Runtime data
+*.pid
+*.sqlite
+
+# .env files
+.env
+
+# PyCharm
+.idea/
+
+# macOS
+.__MACOSX/
+
+# Chrome extension
+*.pem
+
+# Other
+*~
+*.bak
+*.swp
+*.pyo
+*.pyd
+
+# Test dir
+htmlcov/
+
+# Virtual environment
+venv/
+ENV/
+
+# Distribution / packaging
+eggs/
+develop-eggs/
+downloads/
+cache/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.whl/
+*.tar.gz
+
+# PyBuilder
+target/
