@@ -48,7 +48,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === 'ON_URL_CHANGED') {
     if (!context.states.has(getYouTubePageName())) return;
     context.activeState = context.states.get(getYouTubePageName());
-    console.log("NEW ACTIVE GRID", getYouTubePageName(), context.activeState.gridContainer);
+    // console.log("NEW ACTIVE GRID", getYouTubePageName(), context.activeState.gridContainer);
     resyncVideoStates();
     // resyncVideoStates();
   }
@@ -176,7 +176,7 @@ function addNewState(gridContainer) {
   };
   context.states.set(getYouTubePageName(), currentState);
   context.activeState = currentState;
-  console.log("NEW ACTIVE GRID", getYouTubePageName(), context.activeState.gridContainer);
+  // console.log("NEW ACTIVE GRID", getYouTubePageName(), context.activeState.gridContainer);
   return currentState;
 }
 

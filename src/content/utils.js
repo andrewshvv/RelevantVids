@@ -188,12 +188,12 @@ function checkVideoElement(node) {
   // This means the video element is directly added to the DOM and needs to be processed.
   if (node.nodeType === Node.ELEMENT_NODE) {
     if (node.id === INFO_SELECTOR) {
-      console.log("VIDEO ELEMENT APPEARED", node);
+      // console.log("VIDEO ELEMENT APPEARED", node);
       return node
     } else {
       let element = node.querySelector(`#${INFO_SELECTOR}`);
       if (element) {
-        console.log("VIDEO ELEMENT part of", node, element);
+        // console.log("VIDEO ELEMENT part of", node, element);
         return element;
       }
     }
