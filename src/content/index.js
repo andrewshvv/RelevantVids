@@ -20,6 +20,10 @@ let context = {
   activeState: null,
 };
 
+function getCurrentState() {
+  return context.activeState;
+}
+
 // Get the theme value from Chrome storage and update the theme
 chrome.storage.local.get("theme", function (result) {
   updateTheme(result.theme);
