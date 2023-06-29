@@ -1,5 +1,8 @@
 # RelevantVids
 
+<img src="https://github.com/andrewshvv/RelevantVids/blob/main/example.png" width="50%">
+
+
 This Chrome extension is a lighthouse amidst the whirlpool of YouTube distractions, guiding your learning journey with precision and ease. When using YouTube for educational purposes, it's easy to get swept up in the sea of unrelated videos that constantly vie for your attention. This extension is an adept solution to this common dilemma.
 
 Just set your desired learning theme in the extension, and watch as your YouTube page transforms from an overwhelming medley of content into a curated gallery aligned with your interests. It sifts through video titles, highlights the ones relevant to your set theme, and reduces the noise from irrelevant, off-topic content.
